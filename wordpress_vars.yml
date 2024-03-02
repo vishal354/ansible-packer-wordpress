@@ -1,0 +1,4 @@
+file_system_id: "fs-0abcde123f4d56789"
+aws_region: "us-east-1"
+mount_point: "/srv/www/wordpress"
+

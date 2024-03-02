@@ -1,0 +1,78 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+    - "../wordpress_vars.yml"
+
+  tasks:
+    # Update package lists
+    - name: Update apt cache
+      apt: 
+        update_cache: yes
+
+    # Install packages
+    - name: Install Apache2, Ghostscript, PHP, and dependencies
+      apt:
+        name:
+          - apache2
+          - ghostscript
+          - libapache2-mod-php
+          - mysql-server
+          - php
+          - php-bcmath
+          - php-curl
+          - php-imagick
+          - php-intl
+          - php-json
+          - php-mbstring
+          - php-mysql
+          - php-xml
+          - php-zip
+          - nfs-common
+        state: present
+
+    # Create the folder for wordpress files and change ownership
+    - name: Create folder and change ownership
+      file:
+        path: /srv/www/wordpress
+        state: directory
+        owner: www-data
+        group: www-data
+
+    - name: Add EFS mount entry (append if not present)
+      lineinfile:
+        path: /etc/fstab
+        create: yes
+        line: "{{ file_system_id }}.efs.{{ aws_region }}.amazonaws.com:/ {{ mount_point }} nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport,_netdev 0 0"
+        insertafter: "^(.*)$"  # Insert the line after any existing lines
+        state: present
+
+
+    # Enable and start Apache2 service
+    - name: Enable and start Apache2
+      service:
+        name: apache2
+        enabled: yes
+        state: started
+
+    # Configure Apache2 to host the wordpress site
+    - name: Copy Apache2 conf file to remote instance
+      copy:
+        src: "./wordpress.conf"
+        dest: "/etc/apache2/sites-available/wordpress.conf"
+
+    - name: Enable WordPress virtual host
+      command: a2ensite wordpress
+
+    - name: Enable rewrite module
+      command: a2enmod rewrite
+
+    - name: Disable default site
+      command: a2dissite 000-default
+
+    - name: Reload Apache configuration
+      service:
+        name: apache2
+        state: reloaded
+
+    
