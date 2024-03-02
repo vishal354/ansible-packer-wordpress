@@ -14,7 +14,7 @@ packer {
 
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "learn-packer-linux-aws3"
+  ami_name      = "wordpress-autoscale-ami"
   instance_type = "t2.micro"
   region        = "us-east-1"
   source_ami_filter {
@@ -30,7 +30,7 @@ source "amazon-ebs" "ubuntu" {
 }
 
 build {
-  name    = "learn-packer"
+  name    = "build-ami"
   sources = [
     "source.amazon-ebs.ubuntu"
   ]
